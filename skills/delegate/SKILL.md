@@ -1,6 +1,7 @@
 ---
 name: delegate
 description: Deliver an already-aligned change through coordinated implementation delegation, independent review, verification, and real user-surface UAT. Use after scope and acceptance criteria are settled when implementation should be handed off without reopening product decisions.
+disable-model-invocation: true
 ---
 
 # Delegate

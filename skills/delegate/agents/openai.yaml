@@ -1,0 +1,5 @@
+interface:
+  display_name: "Delegate"
+  short_description: "Deliver an aligned change through delegation"
+policy:
+  allow_implicit_invocation: false
