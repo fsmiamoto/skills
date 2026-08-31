@@ -1,0 +1,5 @@
+interface:
+  display_name: "Grill"
+  short_description: "Interview the user about a plan, one question at a time"
+policy:
+  allow_implicit_invocation: false
