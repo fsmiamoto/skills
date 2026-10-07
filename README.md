@@ -5,6 +5,7 @@ Personal agent skills managed with [mansk](https://github.com/fsmiamoto/mansk).
 ## Included skills
 
 - `delegate` — post-alignment implementation delegation, review, verification, and UAT
+- `devin-dispatch` — send small ad-hoc fixes to a Devin cloud session that opens a PR
 - `implement` — spec- or ticket-driven implementation with TDD, verification, and commit
 - `playwright-cli` — browser automation and Playwright CLI workflows
 - `record-demo` — record polished GIF/MP4 walkthroughs of web UI flows with Playwright + ffmpeg
