@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acme Shop architecture, zoom by zoom (C4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+{{DEFS}}
+
+<!-- FICTIONAL example: Acme Shop does not exist. Every name, path and number on this page is invented. -->
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Architecture · C4 model · fictional example</p>
+      <h1>Acme Shop, from the <em>cloud</em> down to the <em>checkout</em>.</h1>
+      <p class="lede">Acme Shop is a small online store. A React storefront calls one API service; a worker
+        built from the same image handles everything that must happen after a commit: payment capture, emails,
+        stock release. Postgres holds orders and an outbox, and a managed queue carries jobs between them.</p>
+      <p class="meta">Branch <b>main</b> · commit <b>example</b> · four zoom levels; click a frame to jump in.</p>
+    </div>
+    {{LENS}}
+  </div>
+</header>
+
+<nav class="levels" aria-label="Zoom levels">
+  <div class="wrap">
+    <span class="brand">Acme Shop</span>
+    <a href="#l1"><b>L1</b>Context</a>
+    <a href="#l2"><b>L2</b>Containers &amp; cloud</a>
+    <a href="#l3"><b>L3</b>Components</a>
+    <a href="#l4"><b>L4</b>Checkout</a>
+    <span class="sp"></span>
+    <a href="#legend"><b>·</b>Legend</a>
+    <a href="#built"><b>·</b>Built vs planned</a>
+  </div>
+</nav>
+
+<main>
+<!-- ============================================================ L1 -->
+<section class="level" id="l1">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l1}}
+      <div><div class="lnum">Level 1 · System context</div>
+        <h2>Who uses Acme Shop, and what it talks to</h2>
+        <p>The shop owns the catalog, carts and orders. It never stores card numbers: a payment provider holds
+          them and reports back by webhook. An email service sends the messages.</p></div>
+    </div>
+    <figure>{{FIG:L1}}
+      <figcaption>Arrows point from the caller. The dashed arrow is the one call that comes in from outside: payment webhooks.</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>Two kinds of people.</strong> Shoppers need no account to buy; staff sign in and get the
+        <code>staff</code> role. {{src:api/src/acme/auth/roles.py|auth/roles.py}}</li>
+      <li><strong>No card data in the shop.</strong> The storefront confirms cards in the provider's widget; the API
+        only sees payment intent ids. {{src:api/src/acme/payments/client.py|payments/client.py}}</li>
+      <li><strong>Webhooks are signed.</strong> Unsigned or replayed calls are rejected before any order changes.
+        {{src:api/src/acme/payments/webhooks.py|payments/webhooks.py}}</li>
+    </ul>
+    <a class="zoom" href="#l2">Zoom into Acme Shop and its cloud ↓</a>
+  </div>
+</section>
+
+<!-- ============================================================ L2 -->
+<section class="level" id="l2">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l2}}
+      <div><div class="lnum">Level 2 · Containers and cloud infra</div>
+        <h2>Two containers, one database, one queue</h2>
+        <p>Staging and prod are separate cloud accounts with the same shape, both built from
+          <code>infra/</code> by Terraform.</p></div>
+    </div>
+    <h3>Runtime topology</h3>
+    <p class="sub">What serves a request, and where the state lives.</p>
+    <figure>{{FIG:L2A}}
+      <figcaption><code>api</code> scales with traffic; <code>worker</code> stays at one replica, so jobs never race each other.</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>One image, two modes</strong>: the entry point starts the HTTP server or the worker loop.
+        {{src:api/src/acme/main.py|main.py}}</li>
+      <li><strong>Postgres 16</strong>, managed, private network only; daily backups kept 7 days.
+        {{src:infra/database.tf|infra/database.tf}}</li>
+      <li><strong>The queue</strong> delivers at least once, so every job handler is idempotent.
+        {{src:infra/queue.tf|infra/queue.tf}}</li>
+    </ul>
+
+    <h3>Delivery</h3>
+    <p class="sub">From a merge to running containers.</p>
+    <figure>{{FIG:L2B}}
+      <figcaption>Migrations run as a one-off task before the new containers start; they must stay backward compatible.</figcaption>
+    </figure>
+    <ul class="notes">
+      <li><strong>One pipeline file</strong> covers web and API. {{src:.ci/pipeline.yml}}</li>
+      <li><strong>Deploys are by digest</strong>, never by a moving tag. {{src:infra/deploy.tf|infra/deploy.tf}}</li>
+    </ul>
+    <a class="zoom" href="#l3">Zoom into the API service ↓</a>
+  </div>
+</section>
+
+<!-- ============================================================ L3 -->
+<section class="level" id="l3">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l3}}
+      <div><div class="lnum">Level 3 · Components</div>
+        <h2>Inside the API service</h2>
+        <p>One Python package per component under <code>api/src/acme/</code>. Routes stay thin; services hold the
+          rules; only <code>db</code> touches SQL.</p></div>
+    </div>
+    <figure>{{FIG:L3}}
+      <figcaption>Arrows are runtime calls. <code>checkout</code> is the component L4 opens up.</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>Import rules</strong> are checked in CI: routes may not import <code>db</code>.
+        {{src:api/importlinter.ini|importlinter.ini}}</li>
+      <li><strong>checkout</strong> runs the whole order placement in one transaction.
+        {{src:api/src/acme/checkout/service.py|checkout/service.py}}</li>
+      <li><strong>orders</strong> rejects any transition not in its table.
+        {{src:api/src/acme/orders/states.py|orders/states.py}}</li>
+    </ul>
+    <a class="zoom" href="#l4">Zoom into checkout ↓</a>
+  </div>
+</section>
+
+<!-- ============================================================ L4 -->
+<section class="level" id="l4">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l4}}
+      <div><div class="lnum">Level 4 · Checkout</div>
+        <h2>Order states, the outbox, and one checkout</h2>
+        <p>The API changes an order and records what must happen next in the same transaction. The worker does
+          the slow, retryable part later. A crash between the two loses nothing.</p></div>
+    </div>
+
+    <h3>The order state machine</h3>
+    <p class="sub">Green loops back; red ends the happy path.</p>
+    <figure>{{FIG:L4A}}
+      <figcaption>{{src:api/src/acme/orders/states.py|orders/states.py}}. Cancelled and refunded orders release their stock.</figcaption>
+    </figure>
+
+    <h3>The worker loop</h3>
+    <p class="sub">The transactional outbox, one pass every 2 seconds.</p>
+    <figure>
+      <div class="ringwrap">
+        {{FIG:L4B}}
+        <ol class="ticks">
+          <li id="pass-1"><span class="n">1</span><div><b>Claim rows</b>Lock up to 50 unsent outbox rows with
+            <code>SKIP LOCKED</code>.</div></li>
+          <li id="pass-2"><span class="n">2</span><div><b>Publish</b>Send one queue message per row, keyed by row id.</div></li>
+          <li id="pass-3"><span class="n">3</span><div><b>Receive job</b>Take the next message from the queue.</div></li>
+          <li id="pass-4"><span class="n">4</span><div><b>Call provider</b>Capture, refund or send email, with the row id as
+            idempotency key.</div></li>
+          <li id="pass-5"><span class="n">5</span><div><b>Record result</b>Mark the row done, or count the failure.</div></li>
+          <li id="pass-6"><span class="n">6</span><div><b>Ack or retry</b>Ack on success; otherwise the queue redelivers with
+            backoff, up to 8 times.</div></li>
+        </ol>
+      </div>
+      <figcaption>{{src:api/src/acme/worker/loop.py|worker/loop.py}} <code>run_once</code>.</figcaption>
+    </figure>
+
+    <h3>One checkout</h3>
+    <p class="sub">Each numbered arrow is one call; dashed arrows are return values.</p>
+    <figure>{{FIG:L4C}}
+      <figcaption>Steps 1-6 are synchronous; the shopper waits for them. Steps 10-12 run later on the worker.</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>Stock is held</strong> while an order is pending and released after 30 minutes without payment.
+        {{src:api/src/acme/checkout/expiry.py|checkout/expiry.py}}</li>
+      <li><strong>Outbox table</strong>: <code>id, kind, payload, attempts, sent_at, done_at</code>.
+        {{src:api/migrations|api/migrations}}</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ legend -->
+<section class="level" id="legend">
+  <div class="wrap">
+    <div class="lnum">Legend</div>
+    <h2>Reading the diagrams</h2>
+    <div class="legend">
+      <div class="lg"><span class="sw kf"></span>The system in focus</div>
+      <div class="lg"><span class="sw k"></span>Acme-owned container or component</div>
+      <div class="lg"><span class="sw g"></span>Cloud managed</div>
+      <div class="lg"><span class="sw gh"></span>Payment provider or CI (external)</div>
+      <div class="lg"><span class="sw p"></span>Person</div>
+      <div class="lg"><span class="sw x"></span>Other external</div>
+      <div class="lg"><span class="sw bd"></span>Boundary (account, service, browser)</div>
+      <div class="lg"><span class="sw pl"></span>Planned items appear only in the list below</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ built vs planned -->
+<section class="level" id="built">
+  <div class="wrap">
+    <div class="lnum">Status</div>
+    <h2>Built vs planned</h2>
+    <p class="lede">Every diagram above shows only what exists in code today. These are written down in
+      {{src:docs/roadmap.md|roadmap.md}} but not built.</p>
+    <div class="bp">
+      <div><h4><span class="pill live">Live</span> In code and running</h4><ul>
+        <li>Guest checkout with card payments</li>
+        <li>Order states, staff cancel and refund</li>
+        <li>Outbox worker for capture, refunds and email</li>
+        <li>Staging and prod accounts from one Terraform config</li>
+      </ul></div>
+      <div><h4><span class="pill plan">Planned</span> Documented, not built</h4><ul>
+        <li>Shopper accounts and saved addresses</li>
+        <li>Partial refunds</li>
+        <li>A second worker replica with per-kind queues</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">Fictional example: Acme Shop and its repository do not exist; source links point at an
+  invented repo. Diagrams are inline SVG; the only script is a small inline nav highlighter (no external scripts).</div></footer>
+
+<script>
+(() => {
+  const links = [...document.querySelectorAll('nav.levels a[href^="#"]')]
+  const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]))
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue
+      links.forEach((a) => a.classList.remove('on'))
+      byId.get(e.target.id)?.classList.add('on')
+    }
+  }, { rootMargin: '-45% 0px -50% 0px' })
+  document.querySelectorAll('section.level').forEach((s) => io.observe(s))
+})()
+</script>
+</body>
+</html>

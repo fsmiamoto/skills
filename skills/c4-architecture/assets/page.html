@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TODO: Project}} architecture, zoom by zoom (C4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+{{CSS}}
+</style>
+</head>
+<body>
+{{DEFS}}
+<!--
+  Skeleton for c4kit.build(). Copy it next to your build.py and pass template=... .
+  Replace every TODO placeholder; build() aborts while any double-brace placeholder is left.
+  Add figures per level as FIG:L2A, FIG:L2B, ... (one figure + caption + notes each); delete unused blocks.
+  Every "What is true today" bullet ends with at least one src placeholder (src:path or src:path|label).
+-->
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Architecture · C4 model · current state</p>
+      <h1>{{TODO: Project}}, from the <em>{{TODO: outermost, e.g. cloud}}</em> down to the <em>{{TODO: core mechanism, e.g. tick}}</em>.</h1>
+      <p class="lede">{{TODO: 3-4 plain sentences: what the system is, where it runs, what holds its state, and the one mechanism L4 explains.}}</p>
+      <p class="meta">Branch <b>{{GIT:branch}}</b> · commit <b>{{GIT:sha}}</b> · four zoom levels; click a frame to jump in.</p>
+    </div>
+    {{LENS}}
+  </div>
+</header>
+
+<nav class="levels" aria-label="Zoom levels">
+  <div class="wrap">
+    <span class="brand">{{TODO: Project}}</span>
+    <a href="#l1"><b>L1</b>Context</a>
+    <a href="#l2"><b>L2</b>Containers</a>
+    <a href="#l3"><b>L3</b>Components</a>
+    <a href="#l4"><b>L4</b>{{TODO: short L4 name, e.g. Engine}}</a>
+    <span class="sp"></span>
+    <a href="#legend"><b>·</b>Legend</a>
+    <a href="#built"><b>·</b>Built vs planned</a>
+  </div>
+</nav>
+
+<main>
+<!-- ============================================================ L1 -->
+<section class="level" id="l1">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l1}}
+      <div><div class="lnum">Level 1 · System context</div>
+        <h2>{{TODO: Who uses it, and what it talks to}}</h2>
+        <p>{{TODO: one or two sentences on the system's job and its external dependencies.}}</p></div>
+    </div>
+    <figure>{{FIG:L1}}
+      <figcaption>Arrows point from the caller. {{TODO: one-line reading hint.}}</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>{{TODO: claim}}</strong> {{TODO: one sentence of detail.}} {{TODO: src:path/to/file|label}}</li>
+    </ul>
+    <a class="zoom" href="#l2">Zoom into {{TODO: Project}} and its infrastructure ↓</a>
+  </div>
+</section>
+
+<!-- ============================================================ L2 -->
+<section class="level" id="l2">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l2}}
+      <div><div class="lnum">Level 2 · Containers and infrastructure</div>
+        <h2>{{TODO: the deployable units and where they run}}</h2>
+        <p>{{TODO: environments, region, what provisions them (Terraform, Helm, scripts).}}</p></div>
+    </div>
+    <h3>Runtime topology</h3>
+    <p class="sub">What serves a request, and where the state lives.</p>
+    <figure>{{FIG:L2}}
+      <figcaption>{{TODO: one-line reading hint.}}</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>{{TODO: claim}}</strong> {{TODO: detail.}} {{TODO: src:path|label}}</li>
+    </ul>
+    <a class="zoom" href="#l3">Zoom into {{TODO: the main container}} ↓</a>
+  </div>
+</section>
+
+<!-- ============================================================ L3 -->
+<section class="level" id="l3">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l3}}
+      <div><div class="lnum">Level 3 · Components</div>
+        <h2>{{TODO: inside the main container}}</h2>
+        <p>{{TODO: how the code is split, and which boundaries are enforced (lint rules, module graph).}}</p></div>
+    </div>
+    <h3>{{TODO: Packages / modules}}</h3>
+    <p class="sub">Solid arrows: runtime calls. Dashed arrows: imports of shared types.</p>
+    <figure>{{FIG:L3}}
+      <figcaption>{{TODO: dependency rules in one line.}}</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>{{TODO: claim}}</strong> {{TODO: detail.}} {{TODO: src:path|label}}</li>
+    </ul>
+    <a class="zoom" href="#l4">Zoom into {{TODO: the core mechanism}} ↓</a>
+  </div>
+</section>
+
+<!-- ============================================================ L4 -->
+<section class="level" id="l4">
+  <div class="wrap">
+    <div class="lhead">{{MINI:l4}}
+      <div><div class="lnum">Level 4 · {{TODO: core mechanism name}}</div>
+        <h2>{{TODO: the mechanism in one headline}}</h2>
+        <p>{{TODO: why this is the part worth understanding first.}}</p></div>
+    </div>
+    <h3>{{TODO: e.g. The request path / The loop / The state machine}}</h3>
+    <p class="sub">{{TODO: reading hint.}}</p>
+    <figure>{{FIG:L4}}
+      <figcaption>{{TODO: src:path/to/core.file|core.file}} {{TODO: one-line caption.}}</figcaption>
+    </figure>
+    <p class="notes-h">What is true today</p>
+    <ul class="notes">
+      <li><strong>{{TODO: claim}}</strong> {{TODO: detail.}} {{TODO: src:path|label}}</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ legend -->
+<section class="level" id="legend">
+  <div class="wrap">
+    <div class="lnum">Legend</div>
+    <h2>Reading the diagrams</h2>
+    <div class="legend">
+      <div class="lg"><span class="sw kf"></span>The system in focus</div>
+      <div class="lg"><span class="sw k"></span>{{TODO: Project}}-owned container or component</div>
+      <div class="lg"><span class="sw g"></span>{{TODO: cloud / platform managed}}</div>
+      <div class="lg"><span class="sw gh"></span>{{TODO: main external service, e.g. GitHub}}</div>
+      <div class="lg"><span class="sw p"></span>Person</div>
+      <div class="lg"><span class="sw x"></span>Other external</div>
+      <div class="lg"><span class="sw bd"></span>Boundary (account, cluster, process)</div>
+      <div class="lg"><span class="sw pl"></span>Planned items appear only in the list below</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ built vs planned -->
+<section class="level" id="built">
+  <div class="wrap">
+    <div class="lnum">Status</div>
+    <h2>Built vs planned</h2>
+    <p class="lede">Every diagram above shows only what exists in code today. These are written down in
+      {{TODO: src:docs/roadmap.md|roadmap}} but not built.</p>
+    <div class="bp">
+      <div><h4><span class="pill live">Live</span> In code and running</h4><ul>
+        <li>{{TODO: shipped capability}}</li>
+      </ul></div>
+      <div><h4><span class="pill plan">Planned</span> Documented, not built</h4><ul>
+        <li>{{TODO: planned capability, with where it is written down}}</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">Generated by hand from the repository at <code>{{GIT:sha}}</code>. Source links point at the
+  repo at that commit. Diagrams are inline SVG; the only script is a small inline nav highlighter (no external scripts).</div></footer>
+
+<script>
+(() => {
+  const links = [...document.querySelectorAll('nav.levels a[href^="#"]')]
+  const byId = new Map(links.map((a) => [a.getAttribute('href').slice(1), a]))
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue
+      links.forEach((a) => a.classList.remove('on'))
+      byId.get(e.target.id)?.classList.add('on')
+    }
+  }, { rootMargin: '-45% 0px -50% 0px' })
+  document.querySelectorAll('section.level').forEach((s) => io.observe(s))
+})()
+</script>
+</body>
+</html>
